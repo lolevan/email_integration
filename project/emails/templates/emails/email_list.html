@@ -48,8 +48,7 @@
         function updateProgressBar(percentage) {
             $('#progress-bar div').css('width', percentage + '%');
         }
-    </script>
-    <script>
+
         const socket = new WebSocket('ws://' + window.location.host + '/ws/progress/');
 
         socket.onmessage = function(event) {
@@ -59,7 +58,7 @@
 
         function fetchEmails() {
             $.ajax({
-                url: '/fetch_emails/',  // Создайте соответствующий маршрут и представление для запуска команды
+                url: '/fetch_emails/',
                 method: 'POST',
                 success: function() {
                     console.log('Fetching emails started');
