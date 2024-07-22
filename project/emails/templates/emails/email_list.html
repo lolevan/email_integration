@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Email List</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #progress-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+            margin: 20px 0;
+        }
+        #progress-bar div {
+            height: 20px;
+            width: 0;
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Email List</h1>
+    <div id="progress-bar"><div></div></div>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Subject</th>
+                <th>Sent Date</th>
+                <th>Received Date</th>
+                <th>Body</th>
+                <th>Attachments</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for message in messages %}
+                <tr>
+                    <td>{{ message.id }}</td>
+                    <td>{{ message.subject }}</td>
+                    <td>{{ message.sent_date }}</td>
+                    <td>{{ message.received_date }}</td>
+                    <td>{{ message.body|truncatewords:20 }}</td>
+                    <td>{{ message.attachments }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+        function updateProgressBar(percentage) {
+            $('#progress-bar div').css('width', percentage + '%');
+        }
+    </script>
+    <script>
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/progress/');
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            updateProgressBar(data.progress);
+        };
+
+        function fetchEmails() {
+            $.ajax({
+                url: '/fetch_emails/',  // Создайте соответствующий маршрут и представление для запуска команды
+                method: 'POST',
+                success: function() {
+                    console.log('Fetching emails started');
+                }
+            });
+        }
+
+        fetchEmails();
+    </script>
+</body>
+</html>
