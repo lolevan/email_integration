@@ -4,5 +4,6 @@ from . import consumers
 
 
 websocket_urlpatterns = [
-    path('ws/progress', consumers.ProgressConsumer.as_asgi()),
+    path('ws/progress/', consumers.ProgressConsumer.as_asgi()),
 ]
+

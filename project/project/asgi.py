@@ -11,6 +11,18 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
 
-application = get_asgi_application()
+import emails.routing
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
+
+application = ProtocolTypeRouter({
+    "http": get_asgi_application(),
+    "websocket": AuthMiddlewareStack(
+        URLRouter(
+            emails.routing.websocket_urlpatterns
+        )
+    ),
+})

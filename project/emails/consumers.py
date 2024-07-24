@@ -1,15 +1,27 @@
-from channels.generic.websocket import WebsocketConsumer
-
 import json
+from channels.generic.websocket import WebsocketConsumer
+from asgiref.sync import async_to_sync
 
 
 class ProgressConsumer(WebsocketConsumer):
     def connect(self):
         self.accept()
+        async_to_sync(self.channel_layer.group_add)("email_progress", self.channel_name)
 
-    def receive(self, text_data):
-        data = json.loads(text_data)
-        progress = data['progress']
+    def disconnect(self, close_code):
+        async_to_sync(self.channel_layer.group_discard)("email_progress", self.channel_name)
+
+    def update_progress(self, event):
+        checked = event['checked']
+        total = event['total']
         self.send(text_data=json.dumps({
-            'progress': progress
+            'checked': checked,
+            'total': total,
+            'progress': int((checked / total) * 100)
+        }))
+
+    def add_email(self, event):
+        email = event['email']
+        self.send(text_data=json.dumps({
+            'email': email
         }))
