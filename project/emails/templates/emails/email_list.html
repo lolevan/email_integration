@@ -59,13 +59,14 @@
         }
 
         function addEmailRow(email) {
+            const attachments = email.attachments.map(att => `${att.filename} (${att.size} bytes)`).join(', ');
             const row = `<tr>
                 <td>${email.id}</td>
                 <td>${email.subject}</td>
                 <td>${email.sent_date}</td>
                 <td>${email.received_date}</td>
                 <td>${email.body}</td>
-                <td>${email.attachments}</td>
+                <td>${attachments}</td>
             </tr>`;
             $('#email-list').append(row);
         }

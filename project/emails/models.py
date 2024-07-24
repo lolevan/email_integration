@@ -12,7 +12,18 @@ class EmailMessage(models.Model):
     sent_date = models.DateTimeField()
     received_date = models.DateTimeField()
     body = models.TextField()
-    attachments = models.JSONField(default=list)  # JSON field to store attachment information
+    attachments = models.JSONField(default=list)
 
     def __str__(self):
         return self.subject
+
+
+class EmailAttachment(models.Model):
+    message = models.ForeignKey(EmailMessage, on_delete=models.CASCADE, related_name='email_attachments')
+    file = models.FileField(upload_to='attachments/')
+    filename = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=100)
+    size = models.IntegerField()
+
+    def __str__(self):
+        return self.filename

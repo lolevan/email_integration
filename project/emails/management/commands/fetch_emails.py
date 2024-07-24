@@ -1,11 +1,13 @@
 from django.core.management.base import BaseCommand
-from ...models import EmailAccount, EmailMessage
+from django.core.files.base import ContentFile
+from ...models import EmailAccount, EmailMessage, EmailAttachment
 from email import message_from_string
 from email.header import decode_header
 import imaplib
 from dateutil import parser
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+import uuid
 
 
 class Command(BaseCommand):
@@ -58,29 +60,45 @@ class Command(BaseCommand):
             else:
                 body = str(body)
 
-            attachments = []
-
-            for part in email_message.walk():
-                if part.get_content_maintype() == 'multipart':
-                    continue
-                if part.get('Content-Disposition') is None:
-                    continue
-
-                attachment = {
-                    'filename': part.get_filename(),
-                    'content_type': part.get_content_type(),
-                    'size': len(part.get_payload(decode=True)),
-                }
-                attachments.append(attachment)
-
             email_obj = EmailMessage.objects.create(
                 account=account,
                 subject=subject,
                 sent_date=sent_date,
                 received_date=sent_date,  # You might want to use another date here
                 body=body,
-                attachments=attachments,
             )
+
+            attachments = []
+            for part in email_message.walk():
+                if part.get_content_maintype() == 'multipart':
+                    continue
+                if part.get('Content-Disposition') is None:
+                    continue
+
+                file_data = part.get_payload(decode=True)
+                filename = part.get_filename()
+                content_type = part.get_content_type()
+                size = len(file_data)
+
+                if not filename:
+                    filename = str(uuid.uuid4())  # Generate a unique filename
+
+                attachment = EmailAttachment(
+                    message=email_obj,
+                    filename=filename,
+                    content_type=content_type,
+                    size=size,
+                )
+                attachment.file.save(filename, ContentFile(file_data))
+                attachment.save()
+                attachments.append({
+                    'filename': filename,
+                    'content_type': content_type,
+                    'size': size,
+                })
+
+            email_obj.attachments = attachments
+            email_obj.save()
 
             async_to_sync(channel_layer.group_send)(
                 'email_progress',
@@ -92,7 +110,7 @@ class Command(BaseCommand):
                         'sent_date': sent_date_str,
                         'received_date': sent_date_str,
                         'body': email_obj.body[:100],  # Limit body length for display
-                        'attachments': email_obj.attachments,
+                        'attachments': attachments,
                     }
                 }
             )
