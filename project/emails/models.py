@@ -2,11 +2,17 @@ from django.db import models
 
 
 class EmailAccount(models.Model):
+    '''
+    Модель для хранения учетных данных почтовых аккаунтов
+    '''
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
 
 
 class EmailMessage(models.Model):
+    '''
+    Модель для хранения информации о сообщениях электронной почты
+    '''
     account = models.ForeignKey(EmailAccount, on_delete=models.CASCADE)
     subject = models.CharField(max_length=255)
     sent_date = models.DateTimeField()
@@ -19,6 +25,9 @@ class EmailMessage(models.Model):
 
 
 class EmailAttachment(models.Model):
+    '''
+    Модель для хранения информации о вложениях сообщений электронной почты
+    '''
     message = models.ForeignKey(EmailMessage, on_delete=models.CASCADE, related_name='email_attachments')
     file = models.FileField(upload_to='attachments/')
     filename = models.CharField(max_length=255)

@@ -21,6 +21,3 @@ def fetch_emails(request):
 def email_list(request):
     messages = EmailMessage.objects.all()
     return render(request, 'emails/email_list.html', {'messages': messages})
-
-
-
